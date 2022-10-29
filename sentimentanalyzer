@@ -1,0 +1,396 @@
+# import library
+from bs4 import BeautifulSoup
+import requests
+import pandas as pd
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+In [68]:
+!pip install requests --upgrade --quiet
+!pip install beautifulsoup4 --upgrade --quiet  
+# handling and Manipulating Tabular Data
+!pip install pandas --upgrade --quiet
+# Numerical operations
+!pip install numpy
+# visualizer
+!pip install matplotlib
+# Sentiment analyzer
+!pip install -U textblob --upgrade --quiet
+Requirement already satisfied: numpy in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (1.21.5)
+Requirement already satisfied: matplotlib in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (3.5.1)
+Requirement already satisfied: packaging>=20.0 in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (from matplotlib) (21.3)
+Requirement already satisfied: kiwisolver>=1.0.1 in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (from matplotlib) (1.3.2)
+Requirement already satisfied: fonttools>=4.22.0 in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (from matplotlib) (4.25.0)
+Requirement already satisfied: pillow>=6.2.0 in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (from matplotlib) (9.0.1)
+Requirement already satisfied: cycler>=0.10 in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (from matplotlib) (0.11.0)
+Requirement already satisfied: python-dateutil>=2.7 in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (from matplotlib) (2.8.2)
+Requirement already satisfied: pyparsing>=2.2.1 in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (from matplotlib) (3.0.4)
+Requirement already satisfied: numpy>=1.17 in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (from matplotlib) (1.21.5)
+Requirement already satisfied: six>=1.5 in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (from python-dateutil>=2.7->matplotlib) (1.16.0)
+In [69]:
+# NLTK Module
+# Using natural language tool kit to import stop words
+# Sentiment analyzer
+!pip install nltk
+import nltk
+Requirement already satisfied: nltk in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (3.7)
+Requirement already satisfied: tqdm in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (from nltk) (4.64.0)
+Requirement already satisfied: click in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (from nltk) (8.0.4)
+Requirement already satisfied: regex>=2021.8.3 in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (from nltk) (2022.3.15)
+Requirement already satisfied: joblib in /Users/mainxhoang/opt/anaconda3/lib/python3.9/site-packages (from nltk) (1.1.0)
+In [70]:
+# nltk downloads for the Project
+nltk.download('vader_lexicon')
+nltk.download('stopwords')
+nltk.download('wordnet')
+nltk.download('punkt')
+# Basic aricle summarization
+!pip install newspaper3k --upgrade --quiet
+# Deep learning article summarization
+!pip install transformers --upgrade --quiet
+# Import the necessary libraries ------> requests
+import requests
+from urllib.request import urlopen,Request
+[nltk_data] Downloading package vader_lexicon to
+[nltk_data]     /Users/mainxhoang/nltk_data...
+[nltk_data]   Package vader_lexicon is already up-to-date!
+[nltk_data] Downloading package stopwords to
+[nltk_data]     /Users/mainxhoang/nltk_data...
+[nltk_data]   Package stopwords is already up-to-date!
+[nltk_data] Downloading package wordnet to
+[nltk_data]     /Users/mainxhoang/nltk_data...
+[nltk_data]   Package wordnet is already up-to-date!
+[nltk_data] Downloading package punkt to
+[nltk_data]     /Users/mainxhoang/nltk_data...
+[nltk_data]   Package punkt is already up-to-date!
+In [71]:
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+In [72]:
+from textblob import TextBlob
+from textblob import Word
+In [73]:
+def sentiment_analyzer(df,column_applied_df = "Text"):
+    try:
+        
+        analyzer = SentimentIntensityAnalyzer()
+        df['nltk_compound'] = df[column_applied_df].apply(lambda x: analyzer.polarity_scores(x)['compound'])
+        df['nltk_positive'] = df[column_applied_df].apply(lambda x: analyzer.polarity_scores(x)['pos'])
+        df['nltk_neutral'] = df[column_applied_df].apply(lambda x: analyzer.polarity_scores(x)['neu'])
+        df['nltk_negative'] = df[column_applied_df].apply(lambda x: analyzer.polarity_scores(x)['neg'])
+        df['textblob_polarity'] = df[column_applied_df].apply(lambda x: TextBlob(x).sentiment[0])
+        df['textblob_subjective'] = df[column_applied_df].apply(lambda x: TextBlob(x).sentiment[1])
+        df.loc[df['nltk_compound'] >= 0.25, 'classifier'] = "Positive"
+        df.loc[df['nltk_compound'] <= -0.25, 'classifier'] = "Negative"
+        new_df = df.filter([column_applied_df,'nltk_compound','textblob_subjective','textblob_polarity','classifier','Rating'])
+        return new_df
+    except Exception as e:
+        print(e)
+        sentiment = pipeline('sentiment-analysis')
+        df['transformers_label']= df[column_applied_df].apply(lambda x: sentiment(x)['label'])
+        df['transformers_score']= df[column_applied_df].apply(lambda x: sentiment(x)['score'])
+In [77]:
+generac=pd.read_csv('gnrctry.csv')
+print(generac)
+                     Review                              Title  \
+0      reviews/0/reviewBody  Nothing Like Having Peace of Mind   
+1    reviews/0/reviewRating              Model 7043 is online~   
+2     reviews/0/reviewTitle  Generator Technician for 20 years   
+3      reviews/1/reviewBody                     Good generator   
+4    reviews/1/reviewRating                      Peace of mind   
+..                      ...                                ...   
+495                     NaN                                NaN   
+496                     NaN                                NaN   
+497                     NaN                                NaN   
+498                     NaN                                NaN   
+499                     NaN                                NaN   
+
+                                                  Text  Rating  
+0    I recently had a Generac Generator installed a...       5  
+1    After a long process of considering my actual ...       5  
+2    Installing the generator was easy, the hardest...       5  
+3    Was Fairly easy to install but the AC low volt...       4  
+4    It took 4 years to finally had officially up &...       5  
+..                                                 ...     ...  
+495  It’s the best I had a portable generator but a...       5  
+496  We live on Long Island and this year we had an...       5  
+497  Having a quality home generator in Florida is ...       5  
+498  If you think by just buying a Generac backup g...       4  
+499  The young man at the pick up counter took the ...       5  
+
+[500 rows x 4 columns]
+In [78]:
+kohler=pd.read_csv('kohlercompare.csv')
+print(kohler)
+                                                 Text  Rating
+0   Purchased a 24Kw Marine Propane Stand-by gen w...       1
+1   During Hurricane IAN the whole home generator ...       1
+2   I see others have had the same troubles we hav...       1
+3   My 20Kw generator worked ok for the first few ...       1
+4   I just upgraded my old Kohler generator to the...       1
+5   Generator purchased after Hurricane Delta. Gen...       1
+6   Thanks to our wonderful Kohler Generator and C...       5
+7   14KW. So far so good. Had an initial issue wit...       4
+8   Good generator, very reliable. It could be qui...       4
+9   We bought 3 whole house Kohler Generators over...       5
+10  Ordered a 13KW generator in September 2020 wit...       1
+11  I own a 17KW Kohler generator which only has 7...       1
+12  Installed and company started it up. It never ...       4
+13  We are an electrical contractor who have insta...       1
+14  Purchased a Kohler 20KW natural gas unit 1-9-1...       1
+15  Purchased a 20KW Kohler Generator from a Gener...       1
+16  If you are considering installing a whole-hous...       1
+17  I purchased a new boat 9 months ago with 11 kw...       1
+18  I purchased a new Kohler 20RES generator 6 mon...       1
+19  I replaced a 6 year old Guardian generator tha...       5
+20  I just wanted to share a blog article I wrote ...       1
+21  We had a Kohler 30RES generator installed ten ...       1
+22  I purchased my Kohler generator a few years ag...       1
+23  Kohler did not put a model # on the boat gener...       2
+24  Been trying to get Kohler generator serviced s...       1
+25  I have owned a 14kw Residential Generator for ...       1
+26  Generator controller went out and was replaced...       1
+27  It is very good brand and it is high quality. ...       5
+28  All of the quality of the machine are great an...       4
+29  Have to do a lot of research and make decision...       5
+30  Kohler makes a high quality generator and it w...       4
+31  We had a huge wind storm that knocked out powe...       4
+32  My Kohler generator was a gift but the person ...       5
+33  My family has been a valued customer of this b...       5
+34  Before my purchase, I knew practically nothing...       4
+35  I always liked the Kohler brand whenever buyin...       5
+36  The Kohler generator has all the feature I am ...       5
+37  This product was conveniently priced well. I a...       5
+38  We had a storm coming a short while back and I...       4
+39  It is a smaller generator and easy to move fro...       5
+40  My wife and I recently - last December (2011) ...      11
+41  Our 2011-installed 20RES, running on propane, ...       4
+42  It was 18 months and 5 days from the day we bo...       2
+43  Expensive to buy, expensive to maintain, and d...       1
+44  It has been a year since I had this unit insta...       5
+45  I've had mine for about 2.5 years. Engine comp...       1
+46  Extremely disappointed in Kohler quality. Sadl...       1
+47  I bought a home that had one of Kohler's gener...       1
+48  I live in Maine. Major system failure ("stator...       1
+49  I purchased a Kohler 20 kw residential generat...       1
+50  Has had a never ending litany of problems. Esp...       1
+51  Warranty on a Kohler generator is deceiving if...       1
+52  Paid a ton of money, serviced it on schedule a...       1
+53  Purchased 3 years ago, have had excellent serv...       1
+54  to the reviews on this unit, i work for a kohl...       5
+55  Had my 20Kw Kohler now for over a year. It run...       5
+56  Pray nothing goes wrong. Be prepared to pay fo...       1
+In [82]:
+bs=pd.read_csv('bscompare.csv')
+print(bs)
+                                                 Text  Rating
+0   Highly recommend this power house generator.. ...       5
+1   Oil cap won't fit back once you take it off . ...       1
+2   Enough power to run my home when needed. Easy ...       5
+3   The generator is heavy and very well made and ...       5
+4   Let me start off saying I have never used a ge...       5
+..                                                ...     ...
+86  I purchased a B&S 30469 in September 2011 from...       5
+87  I bought this generator just in case. Not bein...       5
+88  Although this generator will probably be big e...       4
+89  This generator started on the first pull. Grea...       5
+90  Was going to order one of these. But when I ac...       2
+
+[91 rows x 2 columns]
+In [79]:
+sentiment_generac = sentiment_analyzer(generac)
+sentiment_generac
+Out[79]:	
+Text	nltk_compound	textblob_subjective	textblob_polarity	classifier	Rating
+0	I recently had a Generac Generator installed a...	0.9729	0.635000	0.145952	Positive	5
+1	After a long process of considering my actual ...	0.7631	0.386101	0.164141	Positive	5
+2	Installing the generator was easy, the hardest...	0.9305	0.598753	0.392404	Positive	5
+3	Was Fairly easy to install but the AC low volt...	0.4310	0.566667	0.216667	Positive	4
+4	It took 4 years to finally had officially up &...	0.6742	0.767857	0.142857	Positive	5
+...	...	...	...	...	...	...
+495	It’s the best I had a portable generator but a...	0.8248	0.387500	0.525000	Positive	5
+496	We live on Long Island and this year we had an...	0.9246	0.700513	0.011171	Positive	5
+497	Having a quality home generator in Florida is ...	0.8201	0.382917	0.282917	Positive	5
+498	If you think by just buying a Generac backup g...	-0.9145	0.582937	-0.023413	Negative	4
+499	The young man at the pick up counter took the ...	0.7263	0.393956	0.117033	Positive	5
+500 rows × 6 columns
+
+In [90]:
+sentimentkohler = sentiment_analyzer(kohler)
+sentimentkohler
+Out[90]:	
+Text	nltk_compound	textblob_subjective	textblob_polarity	classifier	Rating
+0	Purchased a 24Kw Marine Propane Stand-by gen w...	-0.6232	0.375000	-0.245000	Negative	1
+1	During Hurricane IAN the whole home generator ...	-0.9235	0.443229	-0.029167	Negative	1
+2	I see others have had the same troubles we hav...	-0.2060	0.378125	-0.100000	NaN	1
+3	My 20Kw generator worked ok for the first few ...	-0.8479	0.321936	-0.017478	Negative	1
+4	I just upgraded my old Kohler generator to the...	-0.7457	0.284524	-0.032143	Negative	1
+5	Generator purchased after Hurricane Delta. Gen...	0.6081	0.270899	0.145310	Positive	1
+6	Thanks to our wonderful Kohler Generator and C...	0.7263	0.550000	0.300000	Positive	5
+7	14KW. So far so good. Had an initial issue wit...	0.8852	0.660000	0.260000	Positive	4
+8	Good generator, very reliable. It could be qui...	0.8303	0.493333	0.396667	Positive	4
+9	We bought 3 whole house Kohler Generators over...	-0.1280	0.485417	0.195833	NaN	5
+10	Ordered a 13KW generator in September 2020 wit...	-0.4631	0.300000	0.062500	Negative	1
+11	I own a 17KW Kohler generator which only has 7...	-0.3421	0.550000	0.114286	Negative	1
+12	Installed and company started it up. It never ...	0.1531	0.590909	0.067273	NaN	4
+13	We are an electrical contractor who have insta...	-0.8417	0.374510	0.021625	Negative	1
+14	Purchased a Kohler 20KW natural gas unit 1-9-1...	-0.9223	0.333039	-0.023898	Negative	1
+15	Purchased a 20KW Kohler Generator from a Gener...	-0.8674	0.512179	0.163462	Negative	1
+16	If you are considering installing a whole-hous...	0.7506	0.333333	0.066667	Positive	1
+17	I purchased a new boat 9 months ago with 11 kw...	0.8225	0.541532	0.114478	Positive	1
+18	I purchased a new Kohler 20RES generator 6 mon...	-0.9062	0.563409	-0.072727	Negative	1
+19	I replaced a 6 year old Guardian generator tha...	0.1799	0.434400	0.137675	NaN	5
+20	I just wanted to share a blog article I wrote ...	-0.1675	0.493333	-0.260000	NaN	1
+21	We had a Kohler 30RES generator installed ten ...	-0.4384	0.411247	0.030616	Negative	1
+22	I purchased my Kohler generator a few years ag...	-0.5216	0.434689	0.031240	Negative	1
+23	Kohler did not put a model # on the boat gener...	0.9497	0.490000	0.300000	Positive	2
+24	Been trying to get Kohler generator serviced s...	0.8047	0.620000	0.340000	Positive	1
+25	I have owned a 14kw Residential Generator for ...	-0.7359	0.272222	-0.113889	Negative	1
+26	Generator controller went out and was replaced...	-0.5256	0.558333	-0.212879	Negative	1
+27	It is very good brand and it is high quality. ...	0.9788	0.673030	0.409091	Positive	5
+28	All of the quality of the machine are great an...	0.9571	0.625000	0.580556	Positive	4
+29	Have to do a lot of research and make decision...	0.5719	0.467619	0.015238	Positive	5
+30	Kohler makes a high quality generator and it w...	0.6047	0.645595	0.063929	Positive	4
+31	We had a huge wind storm that knocked out powe...	0.9498	0.557656	0.145275	Positive	4
+32	My Kohler generator was a gift but the person ...	0.8683	0.754167	0.326389	Positive	5
+33	My family has been a valued customer of this b...	0.9818	0.419583	0.226667	Positive	5
+34	Before my purchase, I knew practically nothing...	0.9379	0.600000	0.304167	Positive	4
+35	I always liked the Kohler brand whenever buyin...	0.8885	0.319167	0.097083	Positive	5
+36	The Kohler generator has all the feature I am ...	0.9846	0.526042	0.388542	Positive	5
+37	This product was conveniently priced well. I a...	0.9714	0.467427	0.325728	Positive	5
+38	We had a storm coming a short while back and I...	0.9760	0.561806	0.361111	Positive	4
+39	It is a smaller generator and easy to move fro...	0.9473	0.574340	0.195628	Positive	5
+40	My wife and I recently - last December (2011) ...	-0.9979	0.414749	-0.040592	Negative	11
+41	Our 2011-installed 20RES, running on propane, ...	-0.9860	0.456608	0.035394	Negative	4
+42	It was 18 months and 5 days from the day we bo...	-0.9843	0.531567	-0.048313	Negative	2
+43	Expensive to buy, expensive to maintain, and d...	-0.8748	0.630569	-0.089277	Negative	1
+44	It has been a year since I had this unit insta...	0.9446	0.467556	0.087081	Positive	5
+45	I've had mine for about 2.5 years. Engine comp...	-0.8402	0.401026	-0.043654	Negative	1
+46	Extremely disappointed in Kohler quality. Sadl...	-0.0929	0.409848	0.103455	NaN	1
+47	I bought a home that had one of Kohler's gener...	0.8506	0.446167	0.070083	Positive	1
+48	I live in Maine. Major system failure ("stator...	-0.7750	0.432540	-0.019823	Negative	1
+49	I purchased a Kohler 20 kw residential generat...	0.1027	0.557738	0.068452	NaN	1
+50	Has had a never ending litany of problems. Esp...	-0.9531	0.652381	-0.196429	Negative	1
+51	Warranty on a Kohler generator is deceiving if...	0.1027	0.833333	0.116667	NaN	1
+52	Paid a ton of money, serviced it on schedule a...	-0.6908	0.372917	-0.125000	Negative	1
+53	Purchased 3 years ago, have had excellent serv...	-0.6390	0.646296	0.050231	Negative	1
+54	to the reviews on this unit, i work for a kohl...	-0.6460	0.443954	0.030392	Negative	5
+55	Had my 20Kw Kohler now for over a year. It run...	0.9886	0.578111	0.430667	Positive	5
+56	Pray nothing goes wrong. Be prepared to pay fo...	0.8692	0.900000	-0.500000	Positive	1
+In [91]:
+sentimentbs = sentiment_analyzer(bs)
+sentimentbs
+Out[91]:	
+Text	nltk_compound	textblob_subjective	textblob_polarity	classifier	Rating
+0	Highly recommend this power house generator.. ...	0.8389	0.468241	0.210947	Positive	5
+1	Oil cap won't fit back once you take it off . ...	0.4386	0.342857	0.244643	Positive	1
+2	Enough power to run my home when needed. Easy ...	0.4404	0.379728	0.056148	Positive	5
+3	The generator is heavy and very well made and ...	0.9476	0.606944	0.230729	Positive	5
+4	Let me start off saying I have never used a ge...	-0.2094	0.545056	0.106101	NaN	5
+...	...	...	...	...	...	...
+86	I purchased a B&S 30469 in September 2011 from...	0.9966	0.439744	0.174847	Positive	5
+87	I bought this generator just in case. Not bein...	0.6142	0.560000	0.166333	Positive	5
+88	Although this generator will probably be big e...	0.0000	0.383333	-0.016667	NaN	4
+89	This generator started on the first pull. Grea...	0.7650	0.515675	0.368452	Positive	5
+90	Was going to order one of these. But when I ac...	-0.0595	0.500000	0.440000	NaN	2
+91 rows × 6 columns
+
+In [95]:
+compound_sentiment=sentiment_generac['nltk_compound'].to_numpy()
+sentiment_classifier=sentiment_generac['classifier'].to_numpy()
+rating=sentiment_generac['Rating'].to_numpy()
+
+plt.hist(compound_sentiment)
+plt.title('Histogram of sentiments on Generac standby generators')
+plt.show()
+
+print('-1.0 = completely negative; 1.0 = completely positive')
+print('')
+avg_senti=sum(compound_sentiment)/500
+avg_rating=sum(rating)/500
+print('Average sentiment is:',f'{avg_senti:.4}')
+print('Average rating is:',avg_rating,'/ 5 stars.')
+
+positive=0
+negative=0
+for i in range (500): 
+    if sentiment_classifier[i]=='Positive': 
+        positive+=1
+    if sentiment_classifier[i]=='Negative': 
+        negative+=1
+
+print('The number of positive reviews:',positive,'(sentiment > 0.25)')
+print('The number of negative reviews:',negative,'(sentiment < -0.25)')
+
+-1.0 = completely negative; 1.0 = completely positive
+
+Average sentiment is: 0.3857
+Average rating is: 4.324 / 5 stars.
+The number of positive reviews: 308 (sentiment > 0.25)
+The number of negative reviews: 80 (sentiment < -0.25)
+In [99]:
+compound_sentiment_kohler=sentimentkohler['nltk_compound'].to_numpy()
+sentiment_classifier_kohler=sentimentkohler['classifier'].to_numpy()
+rating_kohler=sentimentkohler['Rating'].to_numpy()
+
+plt.hist(compound_sentiment_kohler)
+plt.title('Histogram of sentiments on Kohler standby generators')
+plt.show()
+
+print('-1.0 = completely negative; 1.0 = completely positive')
+print('')
+avg_senti_kohler=sum(compound_sentiment_kohler)/57
+avg_rating_kohler=sum(rating_kohler)/57
+print('Average sentiment is:',f'{avg_senti_kohler:.4}')
+print('Average rating is:',f'{avg_rating_kohler:.4}','/ 5 stars.')
+
+positive=0
+negative=0
+for i in range (57): 
+    if sentiment_classifier_kohler[i]=='Positive': 
+        positive+=1
+    if sentiment_classifier_kohler[i]=='Negative': 
+        negative+=1
+
+print('The number of positive reviews:',positive,'(sentiment > 0.25)')
+print('The number of negative reviews:',negative,'(sentiment < -0.25)')
+
+-1.0 = completely negative; 1.0 = completely positive
+
+Average sentiment is: 0.06142
+Average rating is: 2.667 / 5 stars.
+The number of positive reviews: 25 (sentiment > 0.25)
+The number of negative reviews: 24 (sentiment < -0.25)
+In [100]:
+compound_sentiment_bs=sentimentbs['nltk_compound'].to_numpy()
+sentiment_classifier_bs=sentimentbs['classifier'].to_numpy()
+rating_bs=sentimentbs['Rating'].to_numpy()
+
+plt.hist(compound_sentiment_bs)
+plt.title('Histogram of sentiments on Briggs-Stratton standby generators')
+plt.show()
+
+print('-1.0 = completely negative; 1.0 = completely positive')
+print('')
+avg_senti_bs=sum(compound_sentiment_bs)/91
+avg_rating_bs=sum(rating_bs)/91
+print('Average sentiment is:',f'{avg_senti_bs:.4}')
+print('Average rating is:',f'{avg_rating_bs:.4}','/ 5 stars.')
+
+positive=0
+negative=0
+for i in range (57): 
+    if sentiment_classifier_bs[i]=='Positive': 
+        positive+=1
+    if sentiment_classifier_bs[i]=='Negative': 
+        negative+=1
+
+print('The number of positive reviews:',positive,'(sentiment > 0.25)')
+print('The number of negative reviews:',negative,'(sentiment < -0.25)')
+
+-1.0 = completely negative; 1.0 = completely positive
+
+Average sentiment is: 0.3274
+Average rating is: 3.967 / 5 stars.
+The number of positive reviews: 30 (sentiment > 0.25)
+The number of negative reviews: 12 (sentiment < -0.25)
+ 
